@@ -68,13 +68,62 @@ async function searchWeather(city) {
 
         const data = await response.json();
         displayCurrentWeather(data); 
-        showWeather();               
+        showWeather();  
+        // fetch and display the 5-day forecast
+        const forecastUrl = `${BASE_URL}/forecast?q=${city}&appid=${API_KEY}&units=metric`;
+        const forecastResponse = await fetch(forecastUrl);
+        if (!forecastResponse.ok) {
+            throw new Error('Forecast API error');
+        }
+        const forecastData = await forecastResponse.json();
+        displayForecast(forecastData);             
     } catch (error) {
         console.log(error); 
     } finally {
         hideLoading();
         searchBtn.disabled = false;
     }
+}
+
+function filterDailyForecast(list) {
+    const days = {};
+
+    list.forEach(function(item) {
+        const date = new Date(item.dt * 1000).toLocaleDateString();
+
+        if (!days[date]) {
+            days[date] = item;
+        }
+    });
+
+    // Remove today (we already show current weather) and take next 5 days
+    const allDays = Object.values(days);
+    return allDays.slice(1, 6);
+}
+
+function displayForecast(data) {
+    forecastCardsEl.innerHTML = '';
+
+    const dailyData = filterDailyForecast(data.list);
+
+    dailyData.forEach(function(day) {
+        const date = new Date(day.dt * 1000);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const { icon, description } = day.weather[0];
+        const tempHigh = Math.round(day.main.temp_max);
+        const tempLow = Math.round(day.main.temp_min);
+
+        const card = document.createElement('div');
+        card.className = 'forecast-card';
+        card.innerHTML = `
+            <div class="day">${dayName}</div>
+            <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}">
+            <div class="temp-high">${tempHigh}°C</div>
+            <div class="temp-low">${tempLow}°C</div>
+        `;
+
+        forecastCardsEl.appendChild(card);
+    });
 }
 
 searchWeather('Nairobi');
