@@ -98,12 +98,15 @@ async function searchWeather(city) {
     }
 }
 
+// Group the forecast by day
 function filterDailyForecast(list) {
     const days = {};
 
     list.forEach(function(item) {
+        // Convert the timestamp to a day label
         const date = new Date(item.dt * 1000).toLocaleDateString();
 
+        // Keep the first forecast entry for each day
         if (!days[date]) {
             days[date] = item;
         }
@@ -121,6 +124,7 @@ function displayForecast(data) {
     dailyData.forEach(function(day) {
         const date = new Date(day.dt * 1000);
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        // Pull the icon and text description for the day's weather
         const { icon, description } = day.weather[0];
         const tempHigh = Math.round(day.main.temp_max);
         const tempLow = Math.round(day.main.temp_min);
