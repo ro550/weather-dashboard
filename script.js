@@ -34,6 +34,12 @@ function showWeather() {
     errorMessageEl.classList.add('hidden');
 }
 
+function showError(message) {
+    errorTextEl.textContent = message;
+    errorMessageEl.classList.remove('hidden');
+    weatherDisplay.classList.add('hidden');
+}
+
 // takes the raw API data and writes it into the DOM
 function displayCurrentWeather(data) {
     const { name } = data;
@@ -78,7 +84,13 @@ async function searchWeather(city) {
         const forecastData = await forecastResponse.json();
         displayForecast(forecastData);             
     } catch (error) {
-        console.log(error); 
+        if (error.message === 'City not found') {
+            showError('City not found. Please check the spelling and try again.');
+        } else if (error instanceof TypeError) {
+            showError('Unable to connect. Check your internet connection and try again.');
+        } else {
+            showError('Something went wrong. Please try again later.');
+        }
     } finally {
         hideLoading();
         searchBtn.disabled = false;
@@ -96,7 +108,6 @@ function filterDailyForecast(list) {
         }
     });
 
-    // Remove today (we already show current weather) and take next 5 days
     const allDays = Object.values(days);
     return allDays.slice(1, 6);
 }
@@ -126,4 +137,18 @@ function displayForecast(data) {
     });
 }
 
-searchWeather('Nairobi');
+searchBtn.addEventListener('click', function() {
+    const city = cityInput.value.trim();
+    if (city !== '') {
+        searchWeather(city);
+    }
+});
+
+cityInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        const city = cityInput.value.trim();
+        if (city !== '') {
+            searchWeather(city);
+        }
+    }
+});
