@@ -82,7 +82,8 @@ async function searchWeather(city) {
             throw new Error('Forecast API error');
         }
         const forecastData = await forecastResponse.json();
-        displayForecast(forecastData);             
+        displayForecast(forecastData); 
+        saveToHistory(city);            
     } catch (error) {
         if (error.message === 'City not found') {
             showError('City not found. Please check the spelling and try again.');
@@ -152,3 +153,38 @@ cityInput.addEventListener('keydown', function(event) {
         }
     }
 });
+
+function saveToHistory(city) {
+    let history = JSON.parse(localStorage.getItem('weather-history')) || [];
+
+    // Remove the city if it already exists
+    history = history.filter(function(item) {
+        return item.toLowerCase() !== city.toLowerCase();
+    });
+    history.unshift(city);
+
+    if (history.length > 5) {
+        history = history.slice(0, 5);
+    }
+
+    localStorage.setItem('weather-history', JSON.stringify(history));
+    renderSearchHistory();
+}
+
+function renderSearchHistory() {
+    const history = JSON.parse(localStorage.getItem('weather-history')) || [];
+    searchHistoryContainer.innerHTML = '';
+
+    history.forEach(function(city) {
+        const btn = document.createElement('button');
+        btn.className = 'history-btn';
+        btn.textContent = city;
+        btn.addEventListener('click', function() {
+            cityInput.value = city;
+            searchWeather(city);
+        });
+        searchHistoryContainer.appendChild(btn);
+    });
+}
+
+renderSearchHistory();
